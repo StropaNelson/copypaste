@@ -275,10 +275,24 @@
         // Inicializar PeerJS
         function initPeer() {
             peer = new Peer({
+                debug: 2,
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
+                        { urls: 'stun:stun1.l.google.com:19302' },
+                        { urls: 'stun:stun2.l.google.com:19302' },
+                        { urls: 'stun:stun3.l.google.com:19302' },
+                        { urls: 'stun:stun4.l.google.com:19302' },
+                        {
+                            urls: 'turn:metered.ca:443?transport=tcp',
+                            username: 'webrtc',
+                            credential: 'webrtc'
+                        },
+                        {
+                            urls: 'turn:metered.ca:443?transport=udp',
+                            username: 'webrtc',
+                            credential: 'webrtc'
+                        }
                     ]
                 }
             });
@@ -320,7 +334,13 @@
 
             conn.on('error', (err) => {
                 console.error('Connection error:', err);
-                updateStatus('error', '❌ Erro na conexão. Verifique se o ID está correto.');
+                if (err.type === 'peer-unavailable') {
+                    updateStatus('error', '❌ Peer não encontrado. Verifique o ID.');
+                } else if (err.type === 'network') {
+                    updateStatus('error', '❌ Erro de rede. Tente novamente.');
+                } else {
+                    updateStatus('error', '❌ Erro: ' + err.type);
+                }
             });
         }
 
@@ -337,14 +357,49 @@
                 return;
             }
 
-            updateStatus('waiting', '🔄 Conectando...');
+            if (peerCode.length < 10) {
+                alert('ID inválido. Copie o ID completo (não apenas o código curto).');
+                return;
+            }
+
+            updateStatus('waiting', '🔄 Conectando... (pode levar alguns segundos)');
 
             // Desconectar conexão anterior se existir
             if (conn) {
                 conn.close();
             }
 
-            conn = peer.connect(peerCode);
+            const maxAttempts = 3;
+            let attempts = 0;
+
+            function attemptConnection() {
+                attempts++;
+                console.log(`Tentativa ${attempts} de ${maxAttempts}`);
+                
+                conn = peer.connect(peerCode);
+                
+                const timeout = setTimeout(() => {
+                    if (!conn.open) {
+                        console.log('Timeout na tentativa ' + attempts);
+                        if (attempts < maxAttempts) {
+                            conn.close();
+                            setTimeout(attemptConnection, 2000);
+                        } else {
+                            updateStatus('error', '❌ Falha ao conectar. Verifique o ID e tente novamente.');
+                        }
+                    }
+                }, 10000);
+
+                conn.on('open', () => {
+                    clearTimeout(timeout);
+                });
+
+                conn.on('error', () => {
+                    clearTimeout(timeout);
+                });
+            }
+
+            attemptConnection();
             setupConnection(conn);
         }
 
