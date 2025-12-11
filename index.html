@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CopyPaste - Compartilhe Código</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Monaco', 'Courier New', monospace; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 10px; }
-        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 100vh; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; height: auto; } }
         .panel { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
@@ -20,28 +19,29 @@
         .badge.ok { background: #238636; color: #3fb950; }
         .badge.err { background: #da3633; color: #ff7b72; }
         .code-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 10px; text-align: center; }
-        .code-val { font-size: 2rem; font-weight: bold; letter-spacing: 6px; color: #58a6ff; margin: 10px 0; font-family: monospace; }
+        .code-val { font-size: 1.8rem; font-weight: bold; letter-spacing: 4px; color: #58a6ff; margin: 10px 0; font-family: monospace; word-break: break-all; }
         .btn { padding: 10px 15px; border: 1px solid #30363d; background: #0d1117; color: #58a6ff; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; width: 100%; }
         .btn:hover { background: #161b22; border-color: #58a6ff; }
         .btn-green { background: #238636; border-color: #238636; color: white; }
         .btn-green:hover { background: #2ea043; }
-        .btn:disabled { opacity: 0.5; }
-        .row { display: flex; gap: 8px; }
-        .row input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 10px; border-radius: 6px; font-family: inherit; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .row input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 10px; border-radius: 6px; font-family: inherit; font-size: 0.9rem; }
         .row input:focus { outline: none; border-color: #58a6ff; }
         .row button { width: auto; white-space: nowrap; }
         .editor { position: relative; flex: 1; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; background: #0d1117; margin-bottom: 10px; }
-        textarea, pre { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 12px; font-family: inherit; font-size: 0.95rem; line-height: 1.5; border: none; }
+        textarea, pre { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 12px; font-family: inherit; font-size: 0.9rem; line-height: 1.5; border: none; }
         textarea { background: transparent; color: #c9d1d9; z-index: 2; caret-color: #58a6ff; resize: none; }
         pre { background: #0d1117; color: #8b949e; z-index: 1; overflow: hidden; pointer-events: none; }
-        .qr { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; margin-bottom: 10px; text-align: center; display: none; }
-        .qr.show { display: block; }
-        .qr canvas { max-width: 100%; height: auto; margin: 0 auto; }
-        .id-display { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; margin-bottom: 10px; font-size: 0.75rem; word-break: break-all; color: #58a6ff; font-family: monospace; max-height: 80px; overflow-y: auto; }
-        .info { font-size: 0.75rem; color: #8b949e; text-align: center; margin-top: 8px; }
+        pre code { padding: 0; background: none; }
         .notif { position: fixed; top: 10px; right: 10px; background: #238636; color: white; padding: 12px 16px; border-radius: 6px; z-index: 1000; animation: slide 0.3s; }
         .notif.err { background: #da3633; }
         @keyframes slide { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); } }
+        .label { font-size: 0.8rem; color: #8b949e; margin-bottom: 8px; margin-top: 15px; }
+        .label:first-of-type { margin-top: 0; }
+        details { margin-bottom: 10px; }
+        details > summary { cursor: pointer; color: #58a6ff; font-weight: 600; font-size: 0.9rem; }
+        .id-full { background: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 0.75rem; word-break: break-all; color: #58a6ff; max-height: 100px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -52,58 +52,60 @@
                 <span class="badge" id="status">⏳</span>
             </div>
             <div class="code-box">
-                <div style="font-size: 0.8rem; color: #8b949e;">ID Curto</div>
-                <div class="code-val" id="code">---</div>
-                <button class="btn btn-green" onclick="copy()">📋 Copiar</button>
+                <div style="font-size: 0.8rem; color: #8b949e;">ID (6 dígitos)</div>
+                <div class="code-val" id="shortId">---</div>
+                <button class="btn btn-green" onclick="copyShort()">📋 Copiar</button>
             </div>
-            <details style="margin-bottom: 10px;">
-                <summary style="cursor: pointer; font-size: 0.8rem; color: #58a6ff; font-weight: 600;">Ver ID Completo</summary>
-                <div class="id-display" id="fullId">Gerando...</div>
-                <button class="btn" onclick="copyFull()" style="margin-top: 8px;">📋 Copiar ID Completo</button>
+            <details>
+                <summary>📎 Ver ID Completo</summary>
+                <div class="id-full" id="fullId">Gerando...</div>
+                <button class="btn" style="margin-top: 8px;" onclick="copyFull()">📋 Copiar Completo</button>
             </details>
-            <div class="qr" id="qr">
-                <div id="qrcode" style="display: flex; justify-content: center;"></div>
-                <div class="info">Escaneie para conectar</div>
-            </div>
-            <button class="btn" onclick="toggleQR()" style="margin-bottom: 10px;">🔲 QR Code</button>
-            <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 8px;">Cole ID do outro:</div>
+            <div class="label">Cole o ID do outro usuário:</div>
             <div class="row">
-                <input id="peer" placeholder="XXXXXX ou ID completo">
-                <button class="btn" onclick="connect()">🔗 Conectar</button>
+                <input id="peerInput" placeholder="Cole aqui o ID completo" autocomplete="off">
+                <button class="btn btn-green" onclick="connectPeer()">🔗 Conectar</button>
+            </div>
+            <div style="font-size: 0.7rem; color: #8b949e; margin-top: 20px; padding: 10px; background: #0d1117; border-radius: 4px; line-height: 1.6;">
+                <strong>Como usar:</strong><br>
+                1. Copie seu ID COMPLETO<br>
+                2. Compartilhe com o outro<br>
+                3. Ele cola aqui e conecta<br>
+                4. Podem enviar código!
             </div>
         </div>
 
         <div class="panel">
             <div class="header">
                 <h2>💻 Código</h2>
-                <span id="conn" style="font-size: 0.8rem;">⚫ Desconectado</span>
+                <span id="connStatus" style="font-size: 0.8rem;">⚫ Desconectado</span>
             </div>
-            <div style="font-size: 0.8rem; color: #8b949e;">Seu código:</div>
+            <div class="label">Seu código:</div>
             <div class="editor">
                 <pre><code id="hl1"></code></pre>
-                <textarea id="text1" placeholder="Cole/digite código..."></textarea>
+                <textarea id="text1" placeholder="Cole ou escreva código aqui..."></textarea>
             </div>
             <div class="row">
                 <button class="btn" onclick="copyText1()">📋 Copiar</button>
-                <button class="btn btn-green" id="send" onclick="send()" disabled>📤 Enviar</button>
+                <button class="btn btn-green" id="sendBtn" onclick="sendCode()" disabled>📤 Enviar (Ctrl+Enter)</button>
             </div>
-
-            <div style="font-size: 0.8rem; color: #8b949e; margin-top: 15px;">Código Recebido:</div>
+            <div class="label">Código Recebido:</div>
             <div class="editor">
                 <pre><code id="hl2"></code></pre>
-                <textarea id="text2" readonly placeholder="Aguardando..."></textarea>
+                <textarea id="text2" readonly placeholder="Aguardando código..."></textarea>
             </div>
             <div class="row">
                 <button class="btn" onclick="copyText2()">📋 Copiar</button>
-                <button class="btn" id="clear" onclick="clear()" disabled>🗑️ Limpar</button>
+                <button class="btn" id="clearBtn" onclick="clearText2()" disabled>🗑️ Limpar</button>
             </div>
         </div>
     </div>
 
     <script>
-        let peer, conn, myId, fullId;
+        let peer, conn, myFullId;
 
-        function init() {
+        function initPeer() {
+            console.log('[INIT] Iniciando...');
             peer = new Peer({
                 config: {
                     iceServers: [
@@ -117,137 +119,145 @@
                     ]
                 }
             });
+
             peer.on('open', (id) => {
-                fullId = id;
-                myId = Math.abs(id.split('').reduce((h,c) => ((h<<5)-h)+c.charCodeAt(0)|0, 0)).toString().substring(0,6).padStart(6,'0');
-                document.getElementById('code').textContent = myId;
-                document.getElementById('fullId').textContent = fullId;
+                console.log('[OPEN] ID:', id);
+                myFullId = id;
+                document.getElementById('shortId').textContent = id.substring(0, 6).toUpperCase();
+                document.getElementById('fullId').textContent = myFullId;
                 document.getElementById('status').textContent = '✅ Pronto';
                 document.getElementById('status').className = 'badge ok';
-                
-                // Gerar QR Code
-                try {
-                    const qrContainer = document.getElementById('qrcode');
-                    qrContainer.innerHTML = '';
-                    QRCode.toCanvas(qrContainer, fullId, {
-                        width: 180,
-                        margin: 1,
-                        color: { dark: '#c9d1d9', light: '#0d1117' }
-                    }, (err) => {
-                        if (err) console.error('QR Error:', err);
-                    });
-                } catch (e) {
-                    console.error('QR Code generation failed:', e);
-                    document.getElementById('qrcode').textContent = 'Erro ao gerar QR';
-                }
             });
-            peer.on('connection', (c) => setupConn(c));
+
+            peer.on('connection', (c) => {
+                console.log('[CONN] Nova conexão');
+                setupConnection(c);
+            });
+
             peer.on('error', (err) => {
-                console.error('Peer error:', err);
+                console.error('[ERROR]', err);
                 document.getElementById('status').textContent = '❌ Erro';
                 document.getElementById('status').className = 'badge err';
+            });
+        }
+
+        function setupConnection(c) {
+            conn = c;
+
+            conn.on('open', () => {
+                console.log('[OPEN CONN]');
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('connStatus').textContent = '🟢 Conectado';
+                notify('✅ Conectado!');
+            });
+
+            conn.on('data', (data) => {
+                console.log('[DATA]');
+                document.getElementById('text2').value = data;
+                document.getElementById('hl2').textContent = data;
+                document.getElementById('clearBtn').disabled = false;
+                highlight('text2', 'hl2');
+                notify('📩 Recebido!');
+            });
+
+            conn.on('close', () => {
+                console.log('[CLOSE]');
+                document.getElementById('sendBtn').disabled = true;
+                document.getElementById('connStatus').textContent = '⚫ Desconectado';
+            });
+
+            conn.on('error', (err) => {
+                console.error('[CONN ERROR]', err);
                 notify('Erro: ' + err.type, true);
             });
         }
 
-        function setupConn(c) {
-            conn = c;
-            conn.on('open', () => {
-                document.getElementById('send').disabled = false;
-                document.getElementById('conn').textContent = '🟢 Conectado';
-                notify('Conectado com sucesso!');
-            });
-            conn.on('data', (d) => {
-                document.getElementById('text2').value = d;
-                document.getElementById('hl2').textContent = d;
-                document.getElementById('clear').disabled = false;
-                highlight('text2', 'hl2');
-                notify('Código recebido!');
-            });
-            conn.on('close', () => {
-                document.getElementById('send').disabled = true;
-                document.getElementById('conn').textContent = '⚫ Desconectado';
-            });
-            conn.on('error', (err) => {
-                console.error('Connection error:', err);
-                notify('Erro na conexão', true);
-            });
-        }
-
-        function connect() {
-            const id = document.getElementById('peer').value.trim();
-            if (!id) { notify('Cole um ID válido', true); return; }
-            if (id.length < 15) { notify('Use o ID completo (não o código curto)', true); return; }
+        function connectPeer() {
+            const id = document.getElementById('peerInput').value.trim();
+            if (!id || id.length < 15) {
+                notify('Cole o ID COMPLETO (não o curto)', true);
+                return;
+            }
+            console.log('[CONNECT] ID:', id.substring(0, 20) + '...');
             if (conn) conn.close();
             conn = peer.connect(id);
-            setupConn(conn);
-            notify('Conectando...');
+            setupConnection(conn);
+            notify('�� Conectando...');
         }
 
-        function send() {
-            const txt = document.getElementById('text1').value;
-            if (!txt.trim()) { notify('Digite algo', true); return; }
-            if (conn && conn.open) {
-                conn.send(txt);
-                notify('✅ Enviado!');
-            } else {
-                notify('Não conectado', true);
+        function sendCode() {
+            const code = document.getElementById('text1').value;
+            if (!code.trim()) {
+                notify('Digite algo', true);
+                return;
             }
+            if (!conn || !conn.open) {
+                notify('Não conectado', true);
+                return;
+            }
+            conn.send(code);
+            notify('📤 Enviado!');
         }
 
         function highlight(id, hlid) {
-            const txt = document.getElementById(id).value;
-            const code = document.getElementById(hlid);
-            let lang = 'plaintext';
-            if (txt.includes('function ') || txt.includes('const ')) lang = 'javascript';
-            else if (txt.includes('def ')) lang = 'python';
-            else if (txt.includes('<')) lang = 'html';
-            else if (txt.includes('{')) lang = 'json';
-            code.textContent = txt;
-            code.className = lang;
-            hljs.highlightElement(code);
+            try {
+                const txt = document.getElementById(id).value;
+                const code = document.getElementById(hlid);
+                let lang = 'plaintext';
+                if (txt.includes('function ') || txt.includes('const ')) lang = 'javascript';
+                else if (txt.includes('def ')) lang = 'python';
+                else if (txt.includes('<')) lang = 'html';
+                else if (txt.includes('{')) lang = 'json';
+                code.textContent = txt;
+                code.className = lang;
+                hljs.highlightElement(code);
+            } catch(e) {}
         }
 
-        function copy() { navigator.clipboard.writeText(document.getElementById('code').textContent).then(() => notify('ID curto copiado!')); }
-        function copyFull() { navigator.clipboard.writeText(fullId).then(() => notify('ID completo copiado!')); }
-        function copyText1() { navigator.clipboard.writeText(document.getElementById('text1').value).then(() => notify('Copiado!')); }
-        function copyText2() { navigator.clipboard.writeText(document.getElementById('text2').value).then(() => notify('Copiado!')); }
-        function toggleQR() { 
-            const qr = document.getElementById('qr');
-            qr.classList.toggle('show');
-            if (qr.classList.contains('show') && !document.getElementById('qrcode').querySelector('canvas')) {
-                try {
-                    const qrContainer = document.getElementById('qrcode');
-                    qrContainer.innerHTML = '';
-                    QRCode.toCanvas(qrContainer, fullId, {
-                        width: 180,
-                        margin: 1,
-                        color: { dark: '#c9d1d9', light: '#0d1117' }
-                    });
-                } catch (e) {
-                    console.error('QR generation failed:', e);
-                }
-            }
+        function copyShort() {
+            navigator.clipboard.writeText(document.getElementById('shortId').textContent).then(() => notify('ID copiado!'));
         }
-        function clear() { document.getElementById('text2').value = ''; document.getElementById('hl2').textContent = ''; document.getElementById('clear').disabled = true; }
+
+        function copyFull() {
+            if (!myFullId) { notify('ID não gerado', true); return; }
+            navigator.clipboard.writeText(myFullId).then(() => notify('ID COMPLETO copiado!'));
+        }
+
+        function copyText1() {
+            const txt = document.getElementById('text1').value;
+            if (!txt) { notify('Nada para copiar', true); return; }
+            navigator.clipboard.writeText(txt).then(() => notify('Copiado!'));
+        }
+
+        function copyText2() {
+            const txt = document.getElementById('text2').value;
+            if (!txt) { notify('Nada para copiar', true); return; }
+            navigator.clipboard.writeText(txt).then(() => notify('Copiado!'));
+        }
+
+        function clearText2() {
+            document.getElementById('text2').value = '';
+            document.getElementById('hl2').textContent = '';
+            document.getElementById('clearBtn').disabled = true;
+        }
 
         function notify(msg, err = false) {
             const n = document.createElement('div');
-            n.className = `notif ${err ? 'err' : ''}`;
+            n.className = 'notif ' + (err ? 'err' : '');
             n.textContent = msg;
             document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3000);
+            setTimeout(() => n.remove(), 3500);
         }
 
         document.getElementById('text1').addEventListener('input', () => highlight('text1', 'hl1'));
         document.getElementById('text1').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) send();
+            if (e.key === 'Enter' && e.ctrlKey) sendCode();
         });
-        document.getElementById('peer').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') connect();
+        document.getElementById('peerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') connectPeer();
         });
 
-        init();
+        initPeer();
     </script>
 </body>
 </html>
