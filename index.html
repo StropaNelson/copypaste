@@ -3,260 +3,556 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CopyPaste - Compartilhe Código</title>
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <title>CopyPaste - Compartilhe Texto</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Monaco', 'Courier New', monospace; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 10px; }
-        .container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 100vh; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; height: auto; } }
-        .panel { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
-        .header h2 { font-size: 1.1rem; color: #58a6ff; margin: 0; }
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-        .badge.ok { background: #238636; color: #3fb950; }
-        .badge.err { background: #da3633; color: #ff7b72; }
-        .code-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 10px; text-align: center; }
-        .code-val { font-size: 1.8rem; font-weight: bold; letter-spacing: 4px; color: #58a6ff; margin: 10px 0; font-family: monospace; word-break: break-all; }
-        .btn { padding: 10px 15px; border: 1px solid #30363d; background: #0d1117; color: #58a6ff; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; width: 100%; }
-        .btn:hover { background: #161b22; border-color: #58a6ff; }
-        .btn-green { background: #238636; border-color: #238636; color: white; }
-        .btn-green:hover { background: #2ea043; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .row { display: flex; gap: 8px; margin-bottom: 10px; }
-        .row input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 10px; border-radius: 6px; font-family: inherit; font-size: 0.9rem; }
-        .row input:focus { outline: none; border-color: #58a6ff; }
-        .row button { width: auto; white-space: nowrap; }
-        .editor { position: relative; flex: 1; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; background: #0d1117; margin-bottom: 10px; }
-        textarea, pre { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 12px; font-family: inherit; font-size: 0.9rem; line-height: 1.5; border: none; }
-        textarea { background: transparent; color: #c9d1d9; z-index: 2; caret-color: #58a6ff; resize: none; }
-        pre { background: #0d1117; color: #8b949e; z-index: 1; overflow: hidden; pointer-events: none; }
-        pre code { padding: 0; background: none; }
-        .notif { position: fixed; top: 10px; right: 10px; background: #238636; color: white; padding: 12px 16px; border-radius: 6px; z-index: 1000; animation: slide 0.3s; }
-        .notif.err { background: #da3633; }
-        @keyframes slide { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); } }
-        .label { font-size: 0.8rem; color: #8b949e; margin-bottom: 8px; margin-top: 15px; }
-        .label:first-of-type { margin-top: 0; }
-        details { margin-bottom: 10px; }
-        details > summary { cursor: pointer; color: #58a6ff; font-weight: 600; font-size: 0.9rem; }
-        .id-full { background: #0d1117; border: 1px solid #30363d; padding: 10px; border-radius: 4px; margin-top: 8px; font-size: 0.75rem; word-break: break-all; color: #58a6ff; max-height: 100px; overflow-y: auto; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: transparent;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .card.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .status.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .code-section {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .my-code {
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #667eea;
+            word-break: break-all;
+            margin-bottom: 15px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .copy-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .connect-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #63408a;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .connected-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .connected-view.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .connection-header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .connection-header .status {
+            margin: 0 0 10px 0;
+        }
+
+        .connection-id {
+            font-size: 0.85rem;
+            color: #666;
+            word-break: break-all;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .floating-buttons.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .float-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .float-btn.send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .float-btn.paste {
+            background: #17a2b8;
+        }
+
+        .float-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .received-text {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            border-radius: 10px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .received-text.show {
+            display: block;
+        }
+
+        .received-text strong {
+            color: #17a2b8;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .received-text pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="panel">
-            <div class="header">
-                <h2>📤 Seu ID</h2>
-                <span class="badge" id="status">⏳</span>
-            </div>
-            <div class="code-box">
-                <div style="font-size: 0.8rem; color: #8b949e;">ID (6 dígitos)</div>
-                <div class="code-val" id="shortId">---</div>
-                <button class="btn btn-green" onclick="copyShort()">📋 Copiar</button>
-            </div>
-            <details>
-                <summary>📎 Ver ID Completo</summary>
-                <div class="id-full" id="fullId">Gerando...</div>
-                <button class="btn" style="margin-top: 8px;" onclick="copyFull()">📋 Copiar Completo</button>
-            </details>
-            <div class="label">Cole o ID do outro usuário:</div>
-            <div class="row">
-                <input id="peerInput" placeholder="Cole aqui o ID completo" autocomplete="off">
-                <button class="btn btn-green" onclick="connectPeer()">🔗 Conectar</button>
-            </div>
-            <div style="font-size: 0.7rem; color: #8b949e; margin-top: 20px; padding: 10px; background: #0d1117; border-radius: 4px; line-height: 1.6;">
-                <strong>Como usar:</strong><br>
-                1. Copie seu ID COMPLETO<br>
-                2. Compartilhe com o outro<br>
-                3. Ele cola aqui e conecta<br>
-                4. Podem enviar código!
-            </div>
+    <!-- Card de conexão -->
+    <div class="card" id="connectionCard">
+        <h1>📋 CopyPaste</h1>
+        <p class="subtitle">Compartilhe texto entre navegadores de forma simples e segura</p>
+
+        <div class="status waiting" id="cardStatus">
+            🔄 Conectando ao servidor...
         </div>
 
-        <div class="panel">
-            <div class="header">
-                <h2>💻 Código</h2>
-                <span id="connStatus" style="font-size: 0.8rem;">⚫ Desconectado</span>
-            </div>
-            <div class="label">Seu código:</div>
-            <div class="editor">
-                <pre><code id="hl1"></code></pre>
-                <textarea id="text1" placeholder="Cole ou escreva código aqui..."></textarea>
-            </div>
-            <div class="row">
-                <button class="btn" onclick="copyText1()">📋 Copiar</button>
-                <button class="btn btn-green" id="sendBtn" onclick="sendCode()" disabled>📤 Enviar (Ctrl+Enter)</button>
-            </div>
-            <div class="label">Código Recebido:</div>
-            <div class="editor">
-                <pre><code id="hl2"></code></pre>
-                <textarea id="text2" readonly placeholder="Aguardando código..."></textarea>
-            </div>
-            <div class="row">
-                <button class="btn" onclick="copyText2()">📋 Copiar</button>
-                <button class="btn" id="clearBtn" onclick="clearText2()" disabled>🗑️ Limpar</button>
+        <div class="code-section">
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Seu código:</p>
+            <div class="my-code" id="myCode">Gerando...</div>
+            <button class="copy-btn" onclick="copyMyCode()">📋 Copiar Código</button>
+
+            <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">Ou conecte-se a outro usuário:</p>
+                <div class="connect-section">
+                    <input 
+                        type="text" 
+                        id="peerCode" 
+                        placeholder="Cole o ID do outro usuário"
+                    >
+                    <button onclick="connectToPeer()">🔗 Conectar</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        let peer, conn, myFullId;
+    <!-- Visualização conectada -->
+    <div class="connected-view" id="connectedView">
+        <div class="connection-header">
+            <div class="status waiting" id="headerStatus">
+                🔄 Conectando...
+            </div>
+            <div style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">ID da Conexão:</div>
+            <div class="connection-id" id="connectionIdDisplay">-</div>
+        </div>
 
+        <textarea 
+            id="messageText" 
+            placeholder="Digite ou cole seu texto aqui..."
+        ></textarea>
+
+        <div class="received-text" id="receivedText">
+            <strong>📩 Texto Recebido:</strong>
+            <pre id="receivedContent"></pre>
+        </div>
+    </div>
+
+    <!-- Botões flutuantes -->
+    <div class="floating-buttons" id="floatingButtons">
+        <button class="float-btn paste" onclick="pasteFromClipboard()" title="Colar">
+            📌
+        </button>
+        <button class="float-btn send" onclick="sendMessage()" title="Enviar">
+            📤
+        </button>
+    </div>
+
+    <script>
+        let peer;
+        let conn;
+        let myPeerId;
+
+        // Inicializar PeerJS
         function initPeer() {
-            console.log('[INIT] Iniciando...');
             peer = new Peer({
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' },
-                        { urls: 'stun:stun3.l.google.com:19302' },
-                        { urls: 'stun:stun4.l.google.com:19302' },
-                        { urls: 'turn:metered.ca:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
-                        { urls: 'turn:metered.ca:443?transport=udp', username: 'webrtc', credential: 'webrtc' }
+                        { urls: 'stun:stun1.l.google.com:19302' }
                     ]
                 }
             });
 
             peer.on('open', (id) => {
-                console.log('[OPEN] ID:', id);
-                myFullId = id;
-                document.getElementById('shortId').textContent = id.substring(0, 6).toUpperCase();
-                document.getElementById('fullId').textContent = myFullId;
-                document.getElementById('status').textContent = '✅ Pronto';
-                document.getElementById('status').className = 'badge ok';
+                myPeerId = id;
+                document.getElementById('myCode').textContent = id;
+                updateCardStatus('waiting', '✅ Pronto! Compartilhe seu código ou conecte-se a outro usuário');
             });
 
-            peer.on('connection', (c) => {
-                console.log('[CONN] Nova conexão');
-                setupConnection(c);
+            peer.on('connection', (connection) => {
+                setupConnection(connection);
             });
 
             peer.on('error', (err) => {
-                console.error('[ERROR]', err);
-                document.getElementById('status').textContent = '❌ Erro';
-                document.getElementById('status').className = 'badge err';
+                console.error('Peer error:', err);
+                updateCardStatus('error', '❌ Erro de conexão. Recarregue a página.');
             });
         }
 
-        function setupConnection(c) {
-            conn = c;
-
+        function setupConnection(connection) {
+            conn = connection;
+            
             conn.on('open', () => {
-                console.log('[OPEN CONN]');
-                document.getElementById('sendBtn').disabled = false;
-                document.getElementById('connStatus').textContent = '🟢 Conectado';
-                notify('✅ Conectado!');
+                hideCard();
+                showConnectedView();
+                updateHeaderStatus('connected', '🎉 Conectado!');
+                document.getElementById('connectionIdDisplay').textContent = conn.peer;
             });
 
             conn.on('data', (data) => {
-                console.log('[DATA]');
-                document.getElementById('text2').value = data;
-                document.getElementById('hl2').textContent = data;
-                document.getElementById('clearBtn').disabled = false;
-                highlight('text2', 'hl2');
-                notify('📩 Recebido!');
+                document.getElementById('receivedContent').textContent = data;
+                document.getElementById('receivedText').classList.add('show');
             });
 
             conn.on('close', () => {
-                console.log('[CLOSE]');
-                document.getElementById('sendBtn').disabled = true;
-                document.getElementById('connStatus').textContent = '⚫ Desconectado';
+                showCard();
+                hideConnectedView();
+                updateCardStatus('waiting', '⚠️ Conexão encerrada. Reconecte para continuar');
             });
 
             conn.on('error', (err) => {
-                console.error('[CONN ERROR]', err);
-                notify('Erro: ' + err.type, true);
+                console.error('Connection error:', err);
+                updateCardStatus('error', '❌ Erro na conexão. Verifique se o ID está correto.');
             });
         }
 
-        function connectPeer() {
-            const id = document.getElementById('peerInput').value.trim();
-            if (!id || id.length < 15) {
-                notify('Cole o ID COMPLETO (não o curto)', true);
+        function connectToPeer() {
+            const peerCode = document.getElementById('peerCode').value.trim();
+            
+            if (!peerCode) {
+                alert('Por favor, insira o ID do outro usuário');
                 return;
             }
-            console.log('[CONNECT] ID:', id.substring(0, 20) + '...');
-            if (conn) conn.close();
-            conn = peer.connect(id);
+
+            if (!myPeerId) {
+                alert('Seu ID ainda não foi gerado. Aguarde um momento.');
+                return;
+            }
+
+            updateCardStatus('waiting', '🔄 Conectando...');
+
+            // Desconectar conexão anterior se existir
+            if (conn) {
+                conn.close();
+            }
+
+            conn = peer.connect(peerCode);
             setupConnection(conn);
-            notify('�� Conectando...');
         }
 
-        function sendCode() {
-            const code = document.getElementById('text1').value;
-            if (!code.trim()) {
-                notify('Digite algo', true);
+        function sendMessage() {
+            const message = document.getElementById('messageText').value;
+            
+            if (!message.trim()) {
                 return;
             }
-            if (!conn || !conn.open) {
-                notify('Não conectado', true);
-                return;
+
+            if (conn && conn.open) {
+                conn.send(message);
+                document.getElementById('messageText').value = '';
+            } else {
+                alert('❌ Não conectado. Reconecte para continuar.');
             }
-            conn.send(code);
-            notify('📤 Enviado!');
         }
 
-        function highlight(id, hlid) {
-            try {
-                const txt = document.getElementById(id).value;
-                const code = document.getElementById(hlid);
-                let lang = 'plaintext';
-                if (txt.includes('function ') || txt.includes('const ')) lang = 'javascript';
-                else if (txt.includes('def ')) lang = 'python';
-                else if (txt.includes('<')) lang = 'html';
-                else if (txt.includes('{')) lang = 'json';
-                code.textContent = txt;
-                code.className = lang;
-                hljs.highlightElement(code);
-            } catch(e) {}
+        function pasteFromClipboard() {
+            navigator.clipboard.read().then((items) => {
+                if (items.length > 0) {
+                    items[0].getType('text/plain').then((blob) => {
+                        blob.text().then((text) => {
+                            document.getElementById('messageText').value += text;
+                            document.getElementById('messageText').focus();
+                        });
+                    }).catch(() => {
+                        navigator.clipboard.readText().then((text) => {
+                            document.getElementById('messageText').value += text;
+                            document.getElementById('messageText').focus();
+                        }).catch(() => {
+                            alert('Não foi possível colar do clipboard');
+                        });
+                    });
+                }
+            }).catch(() => {
+                navigator.clipboard.readText().then((text) => {
+                    document.getElementById('messageText').value += text;
+                    document.getElementById('messageText').focus();
+                }).catch(() => {
+                    alert('Não foi possível colar do clipboard');
+                });
+            });
         }
 
-        function copyShort() {
-            navigator.clipboard.writeText(document.getElementById('shortId').textContent).then(() => notify('ID copiado!'));
+        function copyMyCode() {
+            const code = document.getElementById('myCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(() => {
+                alert('ID: ' + code);
+            });
         }
 
-        function copyFull() {
-            if (!myFullId) { notify('ID não gerado', true); return; }
-            navigator.clipboard.writeText(myFullId).then(() => notify('ID COMPLETO copiado!'));
+        function updateCardStatus(type, message) {
+            const statusEl = document.getElementById('cardStatus');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
         }
 
-        function copyText1() {
-            const txt = document.getElementById('text1').value;
-            if (!txt) { notify('Nada para copiar', true); return; }
-            navigator.clipboard.writeText(txt).then(() => notify('Copiado!'));
+        function updateHeaderStatus(type, message) {
+            const statusEl = document.getElementById('headerStatus');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
         }
 
-        function copyText2() {
-            const txt = document.getElementById('text2').value;
-            if (!txt) { notify('Nada para copiar', true); return; }
-            navigator.clipboard.writeText(txt).then(() => notify('Copiado!'));
+        function hideCard() {
+            document.getElementById('connectionCard').classList.add('hidden');
         }
 
-        function clearText2() {
-            document.getElementById('text2').value = '';
-            document.getElementById('hl2').textContent = '';
-            document.getElementById('clearBtn').disabled = true;
+        function showCard() {
+            document.getElementById('connectionCard').classList.remove('hidden');
         }
 
-        function notify(msg, err = false) {
-            const n = document.createElement('div');
-            n.className = 'notif ' + (err ? 'err' : '');
-            n.textContent = msg;
-            document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3500);
+        function showConnectedView() {
+            const view = document.getElementById('connectedView');
+            view.classList.add('active');
+            document.getElementById('floatingButtons').classList.add('active');
         }
 
-        document.getElementById('text1').addEventListener('input', () => highlight('text1', 'hl1'));
-        document.getElementById('text1').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) sendCode();
+        function hideConnectedView() {
+            const view = document.getElementById('connectedView');
+            view.classList.remove('active');
+            document.getElementById('floatingButtons').classList.remove('active');
+            document.getElementById('receivedText').classList.remove('show');
+            document.getElementById('messageText').value = '';
+        }
+
+        // Permitir envio com Ctrl+Enter
+        document.getElementById('messageText').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                sendMessage();
+            }
         });
-        document.getElementById('peerInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') connectPeer();
+
+        // Conectar com Enter no campo de código
+        document.getElementById('peerCode').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                connectToPeer();
+            }
         });
 
+        // Inicializar quando a página carregar
         initPeer();
     </script>
 </body>
