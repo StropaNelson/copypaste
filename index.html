@@ -3,279 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CopyPaste - Compartilhe Texto</title>
+    <title>CopyPaste - Compartilhe Código</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 100%;
-            padding: 40px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 2rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.9rem;
-        }
-
-        .status {
-            text-align: center;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .status.waiting {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .code-section {
-            margin-bottom: 25px;
-        }
-
-        .code-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .my-code {
-            flex: 1;
-            padding: 15px;
-            background: #f8f9fa;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-align: center;
-            color: #667eea;
-            letter-spacing: 2px;
-        }
-
-        .copy-btn {
-            padding: 15px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .copy-btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-        }
-
-        .copy-btn:active {
-            transform: translateY(0);
-        }
-
-        .connect-section {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        button {
-            padding: 15px 30px;
-            background: #764ba2;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            background: #63408a;
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .text-area {
-            margin-top: 25px;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-            resize: vertical;
-            transition: border-color 0.3s ease;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .text-area label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .send-btn {
-            width: 100%;
-            margin-top: 15px;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-size: 1rem;
-        }
-
-        .received-text {
-            margin-top: 25px;
-            padding: 15px;
-            background: #e8f4f8;
-            border-left: 4px solid #17a2b8;
-            border-radius: 10px;
-            display: none;
-        }
-
-        .received-text.show {
-            display: block;
-        }
-
-        .received-text strong {
-            color: #17a2b8;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .received-text pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            margin: 0;
-            font-family: inherit;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Monaco', 'Courier New', monospace; background: #0d1117; color: #c9d1d9; min-height: 100vh; padding: 10px; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 100vh; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; height: auto; } }
+        .panel { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 15px; display: flex; flex-direction: column; overflow: hidden; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px solid #30363d; }
+        .header h2 { font-size: 1.1rem; color: #58a6ff; margin: 0; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge.ok { background: #238636; color: #3fb950; }
+        .badge.err { background: #da3633; color: #ff7b72; }
+        .code-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 10px; text-align: center; }
+        .code-val { font-size: 2rem; font-weight: bold; letter-spacing: 6px; color: #58a6ff; margin: 10px 0; font-family: monospace; }
+        .btn { padding: 10px 15px; border: 1px solid #30363d; background: #0d1117; color: #58a6ff; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; width: 100%; }
+        .btn:hover { background: #161b22; border-color: #58a6ff; }
+        .btn-green { background: #238636; border-color: #238636; color: white; }
+        .btn-green:hover { background: #2ea043; }
+        .btn:disabled { opacity: 0.5; }
+        .row { display: flex; gap: 8px; }
+        .row input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 10px; border-radius: 6px; font-family: inherit; }
+        .row input:focus { outline: none; border-color: #58a6ff; }
+        .row button { width: auto; white-space: nowrap; }
+        .editor { position: relative; flex: 1; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; background: #0d1117; margin-bottom: 10px; }
+        textarea, pre { position: absolute; top: 0; left: 0; width: 100%; height: 100%; margin: 0; padding: 12px; font-family: inherit; font-size: 0.95rem; line-height: 1.5; border: none; }
+        textarea { background: transparent; color: #c9d1d9; z-index: 2; caret-color: #58a6ff; resize: none; }
+        pre { background: #0d1117; color: #8b949e; z-index: 1; overflow: hidden; pointer-events: none; }
+        .qr { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px; margin-bottom: 10px; text-align: center; display: none; }
+        .qr.show { display: block; }
+        .qr canvas { margin: 0 auto; }
+        .info { font-size: 0.75rem; color: #8b949e; text-align: center; margin-top: 8px; }
+        .notif { position: fixed; top: 10px; right: 10px; background: #238636; color: white; padding: 12px 16px; border-radius: 6px; z-index: 1000; animation: slide 0.3s; }
+        .notif.err { background: #da3633; }
+        @keyframes slide { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); } }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📋 CopyPaste</h1>
-        <p class="subtitle">Compartilhe texto entre navegadores de forma simples e segura</p>
-
-        <div class="status waiting" id="status">
-            🔄 Conectando ao servidor...
-        </div>
-
-        <div class="code-section">
-            <div class="code-display">
-                <div class="my-code" id="myCode">Gerando...</div>
-                <button class="copy-btn" onclick="copyMyCode()">📋 Copiar</button>
+        <div class="panel">
+            <div class="header">
+                <h2>📤 Seu ID</h2>
+                <span class="badge" id="status">⏳</span>
             </div>
-            <p style="text-align: center; color: #666; font-size: 0.9rem;">
-                Compartilhe este código com outra pessoa
-            </p>
-            <details style="margin-top: 10px; text-align: center; color: #666; font-size: 0.85rem;">
-                <summary style="cursor: pointer;">Ver ID completo</summary>
-                <div id="fullPeerId" style="margin-top: 8px; padding: 8px; background: #f0f0f0; border-radius: 5px; word-break: break-all; font-size: 0.8rem;"></div>
-            </details>
+            <div class="code-box">
+                <div style="font-size: 0.8rem; color: #8b949e;">ID Curto</div>
+                <div class="code-val" id="code">---</div>
+                <button class="btn btn-green" onclick="copy()">📋 Copiar</button>
+            </div>
+            <div class="qr" id="qr">
+                <div id="qrcode"></div>
+                <div class="info">Escaneie para conectar</div>
+            </div>
+            <button class="btn" onclick="toggleQR()" style="margin-bottom: 10px;">🔲 QR Code</button>
+            <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 8px;">Cole ID do outro:</div>
+            <div class="row">
+                <input id="peer" placeholder="XXXXXX ou ID completo">
+                <button class="btn" onclick="connect()">🔗 Conectar</button>
+            </div>
         </div>
 
-        <div class="connect-section">
-            <input 
-                type="text" 
-                id="peerCode" 
-                placeholder="Cole o código/ID do outro usuário"
-            >
-            <button onclick="connectToPeer()">🔗 Conectar</button>
-        </div>
+        <div class="panel">
+            <div class="header">
+                <h2>💻 Código</h2>
+                <span id="conn" style="font-size: 0.8rem;">⚫ Desconectado</span>
+            </div>
+            <div style="font-size: 0.8rem; color: #8b949e;">Seu código:</div>
+            <div class="editor">
+                <pre><code id="hl1"></code></pre>
+                <textarea id="text1" placeholder="Cole/digite código..."></textarea>
+            </div>
+            <div class="row">
+                <button class="btn" onclick="copyText1()">📋 Copiar</button>
+                <button class="btn btn-green" id="send" onclick="send()" disabled>📤 Enviar</button>
+            </div>
 
-        <div class="text-area">
-            <label for="messageText">💬 Sua Mensagem:</label>
-            <textarea 
-                id="messageText" 
-                placeholder="Digite ou cole seu texto aqui..."
-            ></textarea>
-            <button class="send-btn" onclick="sendMessage()" disabled id="sendBtn">
-                📤 Enviar Texto
-            </button>
-        </div>
-
-        <div class="received-text" id="receivedText">
-            <strong>📩 Texto Recebido:</strong>
-            <pre id="receivedContent"></pre>
+            <div style="font-size: 0.8rem; color: #8b949e; margin-top: 15px;">Código Recebido:</div>
+            <div class="editor">
+                <pre><code id="hl2"></code></pre>
+                <textarea id="text2" readonly placeholder="Aguardando..."></textarea>
+            </div>
+            <div class="row">
+                <button class="btn" onclick="copyText2()">📋 Copiar</button>
+                <button class="btn" id="clear" onclick="clear()" disabled>🗑️ Limpar</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let peer;
-        let conn;
-        let myPeerId;
+        let peer, conn, myId;
 
-        // Inicializar PeerJS
-        function initPeer() {
+        function init() {
             peer = new Peer({
-                debug: 2,
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
@@ -283,178 +106,103 @@
                         { urls: 'stun:stun2.l.google.com:19302' },
                         { urls: 'stun:stun3.l.google.com:19302' },
                         { urls: 'stun:stun4.l.google.com:19302' },
-                        {
-                            urls: 'turn:metered.ca:443?transport=tcp',
-                            username: 'webrtc',
-                            credential: 'webrtc'
-                        },
-                        {
-                            urls: 'turn:metered.ca:443?transport=udp',
-                            username: 'webrtc',
-                            credential: 'webrtc'
-                        }
+                        { urls: 'turn:metered.ca:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
+                        { urls: 'turn:metered.ca:443?transport=udp', username: 'webrtc', credential: 'webrtc' }
                     ]
                 }
             });
-
             peer.on('open', (id) => {
-                myPeerId = id;
-                document.getElementById('myCode').textContent = id.substring(0, 8).toUpperCase();
-                document.getElementById('fullPeerId').textContent = id;
-                updateStatus('waiting', '✅ Pronto! Compartilhe seu código ou conecte-se a outro usuário');
+                myId = id;
+                const short = Math.abs(id.split('').reduce((h,c) => ((h<<5)-h)+c.charCodeAt(0)|0, 0)).toString().substring(0,6).padStart(6,'0');
+                document.getElementById('code').textContent = short;
+                document.getElementById('status').textContent = '✅ Pronto';
+                document.getElementById('status').className = 'badge ok';
+                QRCode.toCanvas(document.getElementById('qrcode'), id, { width: 200, margin: 1, color: { dark: '#c9d1d9', light: '#0d1117' } });
             });
-
-            peer.on('connection', (connection) => {
-                setupConnection(connection);
-            });
-
-            peer.on('error', (err) => {
-                console.error('Peer error:', err);
-                updateStatus('error', '❌ Erro de conexão. Recarregue a página.');
+            peer.on('connection', (c) => setupConn(c));
+            peer.on('error', () => {
+                document.getElementById('status').textContent = '❌ Erro';
+                document.getElementById('status').className = 'badge err';
+                notify('Erro. Recarregue.', true);
             });
         }
 
-        function setupConnection(connection) {
-            conn = connection;
-            
+        function setupConn(c) {
+            conn = c;
             conn.on('open', () => {
-                updateStatus('connected', '🎉 Conectado! Agora você pode enviar textos');
-                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('send').disabled = false;
+                document.getElementById('conn').textContent = '🟢 Conectado';
+                notify('Conectado!');
             });
-
-            conn.on('data', (data) => {
-                document.getElementById('receivedContent').textContent = data;
-                document.getElementById('receivedText').classList.add('show');
+            conn.on('data', (d) => {
+                document.getElementById('text2').value = d;
+                document.getElementById('hl2').textContent = d;
+                document.getElementById('clear').disabled = false;
+                highlight('text2', 'hl2');
+                notify('Código recebido!');
             });
-
             conn.on('close', () => {
-                updateStatus('waiting', '⚠️ Conexão encerrada. Reconecte para continuar');
-                document.getElementById('sendBtn').disabled = true;
-            });
-
-            conn.on('error', (err) => {
-                console.error('Connection error:', err);
-                if (err.type === 'peer-unavailable') {
-                    updateStatus('error', '❌ Peer não encontrado. Verifique o ID.');
-                } else if (err.type === 'network') {
-                    updateStatus('error', '❌ Erro de rede. Tente novamente.');
-                } else {
-                    updateStatus('error', '❌ Erro: ' + err.type);
-                }
+                document.getElementById('send').disabled = true;
+                document.getElementById('conn').textContent = '⚫ Desconectado';
             });
         }
 
-        function connectToPeer() {
-            const peerCode = document.getElementById('peerCode').value.trim();
-            
-            if (!peerCode) {
-                alert('Por favor, insira o código ou ID do outro usuário');
-                return;
-            }
-
-            if (!myPeerId) {
-                alert('Seu ID ainda não foi gerado. Aguarde um momento.');
-                return;
-            }
-
-            if (peerCode.length < 10) {
-                alert('ID inválido. Copie o ID completo (não apenas o código curto).');
-                return;
-            }
-
-            updateStatus('waiting', '🔄 Conectando... (pode levar alguns segundos)');
-
-            // Desconectar conexão anterior se existir
-            if (conn) {
-                conn.close();
-            }
-
-            const maxAttempts = 3;
-            let attempts = 0;
-
-            function attemptConnection() {
-                attempts++;
-                console.log(`Tentativa ${attempts} de ${maxAttempts}`);
-                
-                conn = peer.connect(peerCode);
-                
-                const timeout = setTimeout(() => {
-                    if (!conn.open) {
-                        console.log('Timeout na tentativa ' + attempts);
-                        if (attempts < maxAttempts) {
-                            conn.close();
-                            setTimeout(attemptConnection, 2000);
-                        } else {
-                            updateStatus('error', '❌ Falha ao conectar. Verifique o ID e tente novamente.');
-                        }
-                    }
-                }, 10000);
-
-                conn.on('open', () => {
-                    clearTimeout(timeout);
-                });
-
-                conn.on('error', () => {
-                    clearTimeout(timeout);
-                });
-            }
-
-            attemptConnection();
-            setupConnection(conn);
+        function connect() {
+            const id = document.getElementById('peer').value.trim();
+            if (!id) { notify('Cole um ID', true); return; }
+            if (conn) conn.close();
+            conn = peer.connect(id);
+            setupConn(conn);
+            notify('Conectando...');
         }
 
-        function sendMessage() {
-            const message = document.getElementById('messageText').value;
-            
-            if (!message.trim()) {
-                alert('Digite uma mensagem para enviar');
-                return;
-            }
-
+        function send() {
+            const txt = document.getElementById('text1').value;
+            if (!txt.trim()) { notify('Digite algo', true); return; }
             if (conn && conn.open) {
-                conn.send(message);
-                alert('✅ Texto enviado com sucesso!');
+                conn.send(txt);
+                notify('✅ Enviado!');
             } else {
-                alert('❌ Não conectado. Conecte-se primeiro.');
+                notify('Não conectado', true);
             }
         }
 
-        function copyMyCode() {
-            const code = document.getElementById('myCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ Copiado!';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                }, 2000);
-            }).catch(() => {
-                alert('Código: ' + code);
-            });
+        function highlight(id, hlid) {
+            const txt = document.getElementById(id).value;
+            const code = document.getElementById(hlid);
+            let lang = 'plaintext';
+            if (txt.includes('function ') || txt.includes('const ')) lang = 'javascript';
+            else if (txt.includes('def ')) lang = 'python';
+            else if (txt.includes('<')) lang = 'html';
+            else if (txt.includes('{')) lang = 'json';
+            code.textContent = txt;
+            code.className = lang;
+            hljs.highlightElement(code);
         }
 
-        function updateStatus(type, message) {
-            const statusEl = document.getElementById('status');
-            statusEl.className = `status ${type}`;
-            statusEl.textContent = message;
+        function copy() { navigator.clipboard.writeText(document.getElementById('code').textContent).then(() => notify('ID copiado!')); }
+        function copyText1() { navigator.clipboard.writeText(document.getElementById('text1').value).then(() => notify('Copiado!')); }
+        function copyText2() { navigator.clipboard.writeText(document.getElementById('text2').value).then(() => notify('Copiado!')); }
+        function toggleQR() { document.getElementById('qr').classList.toggle('show'); }
+        function clear() { document.getElementById('text2').value = ''; document.getElementById('hl2').textContent = ''; document.getElementById('clear').disabled = true; }
+
+        function notify(msg, err = false) {
+            const n = document.createElement('div');
+            n.className = `notif ${err ? 'err' : ''}`;
+            n.textContent = msg;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
         }
 
-        // Permitir envio com Enter (Ctrl+Enter para nova linha)
-        document.getElementById('messageText').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey && !document.getElementById('sendBtn').disabled) {
-                sendMessage();
-            }
+        document.getElementById('text1').addEventListener('input', () => highlight('text1', 'hl1'));
+        document.getElementById('text1').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) send();
+        });
+        document.getElementById('peer').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') connect();
         });
 
-        // Conectar com Enter no campo de código
-        document.getElementById('peerCode').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                connectToPeer();
-            }
-        });
-
-        // Inicializar quando a página carregar
-        initPeer();
+        init();
     </script>
 </body>
 </html>
