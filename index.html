@@ -175,14 +175,18 @@
         }
 
         .connected-view {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 0;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            z-index: 10;
         }
 
         .connected-view.active {
@@ -193,9 +197,9 @@
         .connection-header {
             background: white;
             padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            border-bottom: 2px solid #ddd;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
         }
 
         .connection-header .status {
@@ -214,18 +218,19 @@
 
         textarea {
             flex: 1;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            padding: 20px;
+            border: none;
+            border-radius: 0;
             font-size: 1rem;
             font-family: inherit;
             resize: none;
-            transition: border-color 0.3s ease;
+            transition: background-color 0.2s ease;
+            background: #fafafa;
         }
 
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            background: white;
         }
 
         .floating-buttons {
@@ -348,11 +353,6 @@
             id="messageText" 
             placeholder="Digite ou cole seu texto aqui..."
         ></textarea>
-
-        <div class="received-text" id="receivedText">
-            <strong>📩 Texto Recebido:</strong>
-            <pre id="receivedContent"></pre>
-        </div>
     </div>
 
     <!-- Botões flutuantes -->
@@ -360,8 +360,8 @@
         <button class="float-btn paste" onclick="pasteFromClipboard()" title="Colar">
             📌
         </button>
-        <button class="float-btn send" onclick="sendMessage()" title="Enviar">
-            📤
+        <button class="float-btn send" onclick="copyAllText()" title="Copiar Tudo">
+            📋
         </button>
     </div>
 
@@ -408,8 +408,8 @@
             });
 
             conn.on('data', (data) => {
-                document.getElementById('receivedContent').textContent = data;
-                document.getElementById('receivedText').classList.add('show');
+                document.getElementById('messageText').value = data;
+                document.getElementById('receivedText').classList.remove('show');
             });
 
             conn.on('close', () => {
@@ -451,42 +451,33 @@
         function sendMessage() {
             const message = document.getElementById('messageText').value;
             
-            if (!message.trim()) {
-                return;
-            }
-
             if (conn && conn.open) {
                 conn.send(message);
-                document.getElementById('messageText').value = '';
-            } else {
-                alert('❌ Não conectado. Reconecte para continuar.');
             }
         }
 
         function pasteFromClipboard() {
-            navigator.clipboard.read().then((items) => {
-                if (items.length > 0) {
-                    items[0].getType('text/plain').then((blob) => {
-                        blob.text().then((text) => {
-                            document.getElementById('messageText').value += text;
-                            document.getElementById('messageText').focus();
-                        });
-                    }).catch(() => {
-                        navigator.clipboard.readText().then((text) => {
-                            document.getElementById('messageText').value += text;
-                            document.getElementById('messageText').focus();
-                        }).catch(() => {
-                            alert('Não foi possível colar do clipboard');
-                        });
-                    });
-                }
+            navigator.clipboard.readText().then((text) => {
+                const textarea = document.getElementById('messageText');
+                textarea.value += text;
+                textarea.focus();
+                sendMessage();
             }).catch(() => {
-                navigator.clipboard.readText().then((text) => {
-                    document.getElementById('messageText').value += text;
-                    document.getElementById('messageText').focus();
-                }).catch(() => {
-                    alert('Não foi possível colar do clipboard');
-                });
+                alert('Não foi possível colar do clipboard');
+            });
+        }
+
+        function copyAllText() {
+            const text = document.getElementById('messageText').value;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(() => {
+                alert('Não foi possível copiar o texto');
             });
         }
 
@@ -534,13 +525,18 @@
             const view = document.getElementById('connectedView');
             view.classList.remove('active');
             document.getElementById('floatingButtons').classList.remove('active');
-            document.getElementById('receivedText').classList.remove('show');
             document.getElementById('messageText').value = '';
         }
 
-        // Permitir envio com Ctrl+Enter
+        // Sincronizar texto em tempo real
+        document.getElementById('messageText').addEventListener('input', () => {
+            sendMessage();
+        });
+
+        // Permitir envio com Ctrl+Enter para envio manual
         document.getElementById('messageText').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.ctrlKey) {
+                clearTimeout(autoSendTimer);
                 sendMessage();
             }
         });
