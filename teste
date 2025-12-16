@@ -1,1 +1,337 @@
-a
+"""
+AI Chart Generator - Streamlit + Google AI Studio + ECharts
+Cria gráficos automaticamente baseado em descrições em linguagem natural
+"""
+
+import streamlit as st
+import json
+import os
+from streamlit_echarts import st_echarts
+import google.generativeai as genai
+
+# Configuração da página
+st.set_page_config(
+    page_title="AI Chart Generator",
+    page_icon="📊",
+    layout="wide"
+)
+
+# Título
+st.title("📊 AI Chart Generator")
+st.markdown("**Descreva o gráfico que você quer e a IA cria para você!**")
+
+# Sidebar para configuração
+with st.sidebar:
+    st.header("⚙️ Configuração")
+    
+    # API Key do Google AI Studio
+    api_key = st.text_input(
+        "Google AI Studio API Key",
+        type="password",
+        help="Cole sua chave de API do Google AI Studio aqui. Obtenha em: https://aistudio.google.com/app/apikey"
+    )
+    
+    if api_key:
+        os.environ["GOOGLE_API_KEY"] = api_key
+        genai.configure(api_key=api_key)
+        st.success("✅ API Key configurada!")
+    else:
+        st.warning("⚠️ Insira sua API Key para começar")
+    
+    st.divider()
+    
+    # Seletor de modelo
+    st.subheader("🤖 Modelo de IA")
+    
+    model_options = {
+        "Gemini 3 Pro Preview (Mais avançado)": "gemini-3-pro-preview",
+        "Gemini 2.5 Pro (Alto desempenho)": "gemini-2.5-pro",
+        "Gemini 2.5 Flash (Rápido e eficiente)": "gemini-2.5-flash",
+        "Gemini 2.5 Flash-Lite (Mais rápido)": "gemini-2.5-flash-lite"
+    }
+    
+    selected_model = st.selectbox(
+        "Selecione o modelo:",
+        options=list(model_options.keys()),
+        index=2,
+        help="Diferentes modelos têm diferentes capacidades e velocidades"
+    )
+    
+    model_name = model_options[selected_model]
+    
+    # Descrições dos modelos
+    model_descriptions = {
+        "gemini-3-pro-preview": "🎯 Modelo mais avançado com raciocínio complexo e compreensão multimodal",
+        "gemini-2.5-pro": "🔥 Alto desempenho para tarefas complexas",
+        "gemini-2.5-flash": "⚡ Rápido com grande janela de contexto",
+        "gemini-2.5-flash-lite": "🚀 Mais rápido e econômico para tarefas de alto volume"
+    }
+    
+    st.info(model_descriptions[model_name])
+    
+    st.divider()
+    
+    st.markdown("""
+    ### 💡 Exemplos de Prompts
+    
+    - "Gráfico de barras com vendas mensais de 2024"
+    - "Gráfico de pizza mostrando participação de mercado"
+    - "Gráfico de linhas com temperatura ao longo do ano"
+    - "Gráfico de área com receita trimestral"
+    - "Gráfico de dispersão com dados de altura e peso"
+    """)
+
+# Sistema de prompts para o Gemini
+SYSTEM_PROMPT = """Você é um especialista em criar configurações de gráficos ECharts.
+Sua tarefa é converter descrições em linguagem natural em configurações JSON válidas para ECharts.
+
+Regras importantes:
+1. Retorne APENAS o JSON, sem explicações adicionais
+2. Use a estrutura completa do ECharts com todos os componentes necessários
+3. Gere dados de exemplo realistas se o usuário não fornecer
+4. Use cores atraentes e design moderno
+5. Inclua tooltip, legend, grid quando apropriado
+6. Para séries numéricas, use números, não strings
+7. Certifique-se de que o JSON seja válido e possa ser parseado
+
+Exemplo de estrutura básica:
+{
+  "title": {"text": "Título do Gráfico"},
+  "tooltip": {},
+  "legend": {"data": ["Series1"]},
+  "xAxis": {"type": "category", "data": ["A", "B", "C"]},
+  "yAxis": {"type": "value"},
+  "series": [{"name": "Series1", "type": "bar", "data": [10, 20, 30]}]
+}
+
+Tipos de gráficos suportados: bar, line, pie, scatter, radar, heatmap, gauge, funnel, sankey, treemap, etc.
+"""
+
+def generate_chart_config(user_prompt: str, model_name: str = 'gemini-2.5-flash') -> dict:
+    """Usa o Gemini para gerar configuração do gráfico"""
+    try:
+        model = genai.GenerativeModel(model_name)
+        
+        full_prompt = f"""{SYSTEM_PROMPT}
+
+Descrição do usuário: {user_prompt}
+
+Gere a configuração ECharts em JSON:"""
+        
+        response = model.generate_content(full_prompt)
+        
+        # Extrair JSON da resposta
+        text = response.text.strip()
+        
+        # Remover markdown code blocks se existirem
+        if text.startswith("```json"):
+            text = text[7:]
+        elif text.startswith("```"):
+            text = text[3:]
+        
+        if text.endswith("```"):
+            text = text[:-3]
+        
+        text = text.strip()
+        
+        # Parse do JSON
+        config = json.loads(text)
+        return config
+        
+    except json.JSONDecodeError as e:
+        st.error(f"❌ Erro ao processar JSON: {e}")
+        st.code(text, language="text")
+        return None
+    except Exception as e:
+        st.error(f"❌ Erro ao gerar gráfico: {e}")
+        return None
+
+# Interface principal
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    st.subheader("📝 Descrição do Gráfico")
+    
+    # Input do usuário
+    user_input = st.text_area(
+        "Descreva o gráfico que você quer criar:",
+        value=st.session_state.get('user_input', ''),
+        height=150,
+        placeholder="Ex: Crie um gráfico de barras mostrando as vendas trimestrais de 2024, com Q1: 15000, Q2: 23000, Q3: 18000, Q4: 27000",
+        key="user_input_field"
+    )
+    
+    # Botão para gerar
+    generate_button = st.button("🚀 Gerar Gráfico", type="primary", use_container_width=True)
+    
+    # Exemplos rápidos com dados fictícios
+    st.markdown("**📋 Exemplos rápidos com dados:**")
+    
+    examples = {
+        "📊 Barras - Vendas": """Gráfico de barras vertical mostrando vendas trimestrais 2024:
+Q1: R$ 145.000, Q2: R$ 198.000, Q3: R$ 167.000, Q4: R$ 210.000
+Use cores vibrantes e mostre valores nas barras""",
+        
+        "🥧 Pizza - Market Share": """Gráfico de pizza 3D com participação de mercado de smartphones:
+Samsung 28%, Apple 27%, Xiaomi 18%, Oppo 12%, Outros 15%
+Use cores diferentes para cada marca""",
+        
+        "📈 Linhas - Temperatura": """Gráfico de linhas com temperatura média mensal em São Paulo 2024:
+Jan: 25°C, Fev: 26°C, Mar: 24°C, Abr: 22°C, Mai: 19°C, Jun: 17°C,
+Jul: 17°C, Ago: 19°C, Set: 21°C, Out: 23°C, Nov: 24°C, Dez: 25°C
+Com área preenchida sob a linha""",
+        
+        "📊 Barras Empilhadas": """Gráfico de barras empilhadas horizontal mostrando receita por categoria e trimestre 2024:
+Q1 - E-commerce: 80k, Lojas: 60k, Atacado: 50k
+Q2 - E-commerce: 95k, Lojas: 70k, Atacado: 55k
+Q3 - E-commerce: 110k, Lojas: 65k, Atacado: 48k
+Q4 - E-commerce: 130k, Lojas: 85k, Atacado: 62k""",
+        
+        "📉 Área Empilhada": """Gráfico de área empilhada mostrando uso de energia por fonte ao longo de 2024:
+Jan-Dez com Solar (15-45 MW), Eólica (30-80 MW), Hidrelétrica (100-120 MW)
+Use gradientes suaves""",
+        
+        "🎯 Dispersão": """Gráfico de dispersão mostrando relação altura x peso de 50 pessoas:
+Altura entre 150-190 cm, Peso entre 50-100 kg
+Adicione linha de tendência""",
+        
+        "🎨 Radar": """Gráfico radar comparando 3 smartphones (iPhone 15, Galaxy S24, Pixel 8):
+Categorias: Bateria (0-100), Câmera (0-100), Performance (0-100), 
+Tela (0-100), Design (0-100), Preço-Benefício (0-100)
+iPhone: 85, 95, 98, 90, 95, 70
+Galaxy: 90, 92, 95, 95, 88, 80
+Pixel: 82, 90, 88, 92, 85, 95""",
+        
+        "🔥 Heatmap": """Gráfico heatmap mostrando tráfego do site por hora e dia da semana:
+Segunda a Domingo (linhas) vs 0h-23h (colunas)
+Segunda: pico entre 9h-18h
+Fim de semana: pico entre 10h-22h
+Use escala de cores do azul ao vermelho""",
+        
+        "⏱️ Gauge": """Gráfico gauge (velocímetro) mostrando taxa de satisfação do cliente:
+Valor atual: 87% 
+Escala 0-100%
+Verde: 80-100, Amarelo: 60-79, Vermelho: 0-59""",
+        
+        "📊 Funil": """Gráfico funil de conversão de vendas:
+Visitantes: 10.000
+Cadastros: 3.500
+Carrinho: 1.200
+Compra: 450
+Pós-venda: 380
+Mostre porcentagem de conversão""",
+        
+        "🌳 Treemap": """Gráfico treemap mostrando distribuição de despesas mensais:
+Moradia (40%): Aluguel 2500, Condomínio 400, IPTU 150
+Alimentação (25%): Supermercado 800, Restaurantes 500
+Transporte (15%): Combustível 400, Manutenção 200
+Lazer (10%): Cinema 100, Streaming 150
+Outros (10%): 500
+Use cores diferentes por categoria""",
+        
+        "📅 Calendário": """Gráfico calendário (heatmap) mostrando commits do GitHub em 2024:
+365 dias com valores entre 0-20 commits por dia
+Mais ativo em dias úteis, menos em finais de semana
+Use gradiente verde do GitHub""",
+        
+        "🕸️ Sankey": """Diagrama Sankey mostrando fluxo de energia em uma casa:
+Entrada: Rede Elétrica (1000 kWh)
+Distribuição: Climatização (400), Iluminação (200), Eletrônicos (250), Cozinha (150)
+Use cores diferentes para cada fluxo""",
+        
+        "🎇 Sunburst": """Gráfico sunburst mostrando estrutura de vendas:
+Total Vendas > [Região Norte (30%), Sul (25%), Sudeste (45%)]
+Cada região dividida em: Online (60%) e Física (40%)
+Use cores hierárquicas""",
+        
+        "🔵 Bolhas": """Gráfico de bolhas mostrando países por PIB, População e Continente:
+5 países com: Eixo X (PIB), Eixo Y (População), Tamanho (Área territorial)
+Use cores por continente""",
+    }
+    
+    # Organizar em grid de 3 colunas
+    example_keys = list(examples.keys())
+    num_cols = 3
+    num_rows = (len(example_keys) + num_cols - 1) // num_cols
+    
+    for row in range(num_rows):
+        cols = st.columns(num_cols)
+        for col_idx in range(num_cols):
+            idx = row * num_cols + col_idx
+            if idx < len(example_keys):
+                key = example_keys[idx]
+                with cols[col_idx]:
+                    if st.button(key, use_container_width=True, key=f"btn_{idx}"):
+                        st.session_state['user_input'] = examples[key]
+                        st.rerun()
+
+with col2:
+    st.subheader("📊 Gráfico Gerado")
+    
+    chart_placeholder = st.empty()
+
+# Processamento
+if generate_button and user_input:
+    if not api_key:
+        st.error("⚠️ Por favor, configure sua API Key do Google AI Studio na barra lateral!")
+    else:
+        with st.spinner("🤖 IA gerando o gráfico..."):
+            config = generate_chart_config(user_input, model_name)
+            
+            if config:
+                # Salvar no session state
+                st.session_state['chart_config'] = config
+                st.session_state['user_prompt'] = user_input
+                st.success("✅ Gráfico gerado com sucesso!")
+                
+# Limpar campo de entrada se necessário
+if 'user_input' in st.session_state and st.session_state.get('user_input') != st.session_state.get('user_input_field', ''):
+    if st.session_state.get('user_input_field', ''):
+        st.session_state['user_input'] = st.session_state['user_input_field']
+
+# Exibir gráfico se existir no session state
+if 'chart_config' in st.session_state:
+    with chart_placeholder.container():
+        st_echarts(
+            options=st.session_state['chart_config'],
+            height="500px",
+            key="ai_chart"
+        )
+    
+    # Mostrar a configuração JSON em um expander
+    with st.expander("🔍 Ver Configuração JSON"):
+        st.json(st.session_state['chart_config'])
+        
+        # Botão para copiar JSON
+        json_str = json.dumps(st.session_state['chart_config'], indent=2, ensure_ascii=False)
+        st.code(json_str, language="json")
+        
+    # Opção de editar manualmente
+    with st.expander("✏️ Editar Configuração Manualmente"):
+        edited_config = st.text_area(
+            "Edite o JSON abaixo:",
+            value=json.dumps(st.session_state['chart_config'], indent=2, ensure_ascii=False),
+            height=300
+        )
+        
+        if st.button("🔄 Atualizar Gráfico"):
+            try:
+                new_config = json.loads(edited_config)
+                st.session_state['chart_config'] = new_config
+                st.success("✅ Gráfico atualizado!")
+                st.rerun()
+            except json.JSONDecodeError as e:
+                st.error(f"❌ JSON inválido: {e}")
+
+else:
+    with chart_placeholder.container():
+        st.info("👆 Descreva o gráfico que você quer e clique em 'Gerar Gráfico'")
+
+# Footer
+st.divider()
+st.markdown("""
+<div style='text-align: center; color: #666; padding: 20px;'>
+    <p>🚀 Powered by <strong>Google AI Studio (Gemini)</strong> + <strong>Streamlit</strong> + <strong>Apache ECharts</strong></p>
+    <p>💡 Obtenha sua API Key em: <a href='https://aistudio.google.com/app/apikey' target='_blank'>Google AI Studio</a></p>
+</div>
+""", unsafe_allow_html=True)
